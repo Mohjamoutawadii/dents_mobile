@@ -1,36 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, ToastAndroid } from 'react-native';
+import { View, ToastAndroid, ActivityIndicator, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TPActivityLayout from './TPActivityLayout';
 import axios from 'axios';
+import { useFocusEffect } from '@react-navigation/native';
+import AppConfig from './config';
 
 const TPS = () => {
     const [pws, setPws] = useState([]);
     const [id, setId] = useState('');
-    const [photoBase64, setPhotoBase64] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const getId = async () => {
-            try {
-                let data = await AsyncStorage.getItem('user');
-                data = JSON.parse(data);
-                setId(data.id);
-            } catch (error) {
-                console.error('Error fetching code: ', error);
-            }
-        };
-
-        getId();
-    }, []);
-
-    useEffect(() => {
-        if (id !== '') {
-            loadProfs();
-        }
-    }, [id]);
-
-    const loadProfs = async () => {
-        const url = `http://192.168.0.92:5050/etudiant/studentpw?id=${encodeURIComponent(id)}`;
+    const loadProfs = async (userId) => {
+        const url = AppConfig.etudiantUrl  +`/studentpw?id=${encodeURIComponent(userId)}`;
         console.log('URL:', url);
         try {
             const response = await axios.get(url);
@@ -39,24 +21,52 @@ const TPS = () => {
                 const parsedPws = data.map((item) => ({
                     internes: item.internes,
                     externes: item.externes,
-                    image: item.image1 ? decodeURIComponent(item.image1) : null
+                    image: item.image1 ? decodeURIComponent(item.image1) : null,
+                    date: item.date,
+                    remarque: item.remarque,
+                    note: item.note,
+                    depouilles: item.depouilles,
+                    convergence: item.convergence,
+                    pwtitle: item.pw.title
                 }));
                 setPws(parsedPws);
-                ToastAndroid.show('Chargement de données', ToastAndroid.SHORT);
-            } else {
-                console.error('Les données reçues ne sont pas au format attendu :', data);
-                ToastAndroid.show('Erreur : Données incorrectes', ToastAndroid.SHORT);
-            }
+            } 
         } catch (error) {
-            console.error('Error fetching data: ', error);
-            ToastAndroid.show('Erreur : Échec de la récupération des données', ToastAndroid.SHORT);
+            console.log('An Error Occurred. Please Retry Later.: ', error);
+            ToastAndroid.show('Error : An Error Occurred. Please Retry Later.', ToastAndroid.SHORT);
+        } finally {
+            setLoading(false);
         }
     };
-    
+
+    useEffect(() => {
+        const getIdAndLoadProfs = async () => {
+            try {
+                let data = await AsyncStorage.getItem('user');
+                data = JSON.parse(data);
+                setId(data.id);
+                await loadProfs(data.id);
+            } catch (error) {
+                console.error('Error fetching code: ', error);
+            }
+        };
+
+        getIdAndLoadProfs();
+    }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            loadProfs(id);
+        }, [id]) // Call loadProfs whenever 'id' changes
+    );
 
     return (
         <View style={{ flex: 1 }}>
-            <TPActivityLayout pws={pws} />
+            {loading ? (
+                <ActivityIndicator size="large" color="black"/>
+            ) : (
+                <TPActivityLayout pws={pws} />
+            )}
         </View>
     );
 };

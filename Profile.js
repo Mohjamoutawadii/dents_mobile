@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ToastAndroid, Scro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { launchImageLibrary } from 'react-native-image-picker';
+import AppConfig from './config';
 
 const Profile = () => {
   const [fname, setFname] = useState('');
@@ -15,9 +16,17 @@ const Profile = () => {
 
   useEffect(() => {
     const getData = async () => {
-      try {
-        let data = await AsyncStorage.getItem('user');
-        data = JSON.parse(data);
+      let data = await AsyncStorage.getItem('user');
+      userdata = JSON.parse(data);
+      const url = AppConfig.etudiantUrl + '/getstudent';
+
+      const response = await axios.post(url, {
+        userName: userdata.userName,
+      });
+
+      // Si le statut de la réponse est "FORBIDDEN", cela signifie que l'authentification a échoué
+      if (response.status === 200) {
+        const data = response.data;
         setGroupe(data.groupe.code);
         setFname(data.firstName);
         setLname(data.lastName);
@@ -29,34 +38,31 @@ const Profile = () => {
           setPhotoBase64(decodedPhoto);
         }
 
-      } catch (error) {
-        console.error('Error fetching data: ', error);
       }
-    };
-
-    getData();
+    }; getData();
   }, []);
+
 
   const handleImagePicker = () => {
     let options = {
       mediaType: 'photo', // Spécifier le type de média comme une photo
-      includeBase64: true, // Demander à inclure la représentation base64 de l'image
-      maxHeight: 200, // Spécifier la hauteur maximale de l'image
-      maxWidth: 200, // Spécifier la largeur maximale de l'image
+      includeBase64: true,
+      maxHeight: 200,
+      maxWidth: 200,
     };
 
     launchImageLibrary(options, (response) => {
-      if (!response.didCancel && !response.errorCode) { // Vérifier si la sélection d'image a été annulée ou si une erreur s'est produite
-        setPhotoBase64(response.assets[0].base64); // Mettre à jour l'état avec la représentation base64 de l'image sélectionnée
+      if (!response.didCancel && !response.errorCode) {
+        setPhotoBase64(response.assets[0].base64);
       }
     });
   };
 
-  
-  
+
+
 
   const handleSubmit = async () => {
-    const url = `http://192.168.0.92:5050/etudiant/changeProfil?email=${encodeURIComponent(email)}`;
+    const url = AppConfig.etudiantUrl + `/changeProfil?email=${encodeURIComponent(email)}`;
     const data = {
       email: email,
       firstName: fname,
@@ -68,10 +74,12 @@ const Profile = () => {
 
     try {
       const response = await axios.post(url, data);
-      const responseData = response.data;
+      if (response.status === 200) {
+        ToastAndroid.show('Pofile Changed Successfully', ToastAndroid.SHORT);
+      }
     } catch (error) {
       console.error('Error fetching data: ', error);
-      ToastAndroid.show('Erreur : Échec de la récupération des données', ToastAndroid.SHORT);
+      ToastAndroid.show('Erreur : An Error Occurred. Please Retry Later.', ToastAndroid.SHORT);
     }
   };
 
@@ -79,47 +87,85 @@ const Profile = () => {
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <View style={styles.container}>
         <View style={styles.detailsContainer}>
-          {photoBase64 && (
+          <View style={styles.imageContainer}>
+            {photoBase64 && (
+              <Image
+                style={styles.profileImage}
+                source={{ uri: `data:image/jpeg;base64,${photoBase64}` }}
+              />
+            )}
+            <TouchableOpacity onPress={handleImagePicker}>
+              <Text style={[styles.change, { textDecorationLine: 'underline' }]}>Change Image</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.detailsRow}>
             <Image
-              style={{ width: 100, height: 100 }}
-              source={{ uri: `data:image/jpeg;base64,${photoBase64}` }}
+              source={require('./android/app/src/main/res/mipmap-hdpi/i1.jpeg')}
+              style={{ width: 20, height: 20, marginRight: 10 }}
             />
-          )}
-          <TouchableOpacity style={styles.button} onPress={handleImagePicker}>
-            <Text style={styles.buttonText}>Change Profile Picture</Text>
-          </TouchableOpacity>
-          <Text style={styles.label}>First Name:</Text>
-          <TextInput
-            style={styles.input}
-            value={fname}
-            onChangeText={(text) => setFname(text)}
-          />
-          <Text style={styles.label}>Last Name:</Text>
-          <TextInput
-            style={styles.input}
-            value={lname}
-            onChangeText={(text) => setLname(text)}
-          />
-          <Text style={styles.label}>Username:</Text>
-          <TextInput
-            style={styles.input}
-            value={uname}
-            onChangeText={(text) => setUname(text)}
-          />
-          <Text style={styles.label}>Email:</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={(text) => setEmail(text)}
-          />
-          <Text style={styles.label}>Number:</Text>
-          <TextInput
-            style={styles.input}
-            value={number}
-            onChangeText={(text) => setNumber(text)}
-          />
-          <Text style={styles.label}>Groupe:</Text>
-          <Text style={styles.value}>{groupe}</Text>
+            <Text style={styles.label}>First Name:</Text>
+            <TextInput
+              style={styles.input}
+              value={fname}
+              onChangeText={(text) => setFname(text)}
+            />
+          </View>
+          <View style={styles.detailsRow}>
+            <Image
+              source={require('./android/app/src/main/res/mipmap-hdpi/i1.jpeg')}
+              style={{ width: 20, height: 20, marginRight: 10 }}
+            />
+            <Text style={styles.label}>Last Name:</Text>
+            <TextInput
+              style={styles.input}
+              value={lname}
+              onChangeText={(text) => setLname(text)}
+            />
+          </View>
+          <View style={styles.detailsRow}>
+            <Image
+              source={require('./android/app/src/main/res/mipmap-hdpi/i3.jpeg')}
+              style={{ width: 20, height: 20, marginRight: 10 }}
+            />
+            <Text style={styles.label}>Username :</Text>
+            <TextInput
+              style={styles.input}
+              value={uname}
+              onChangeText={(text) => setUname(text)}
+            />
+          </View>
+          <View style={styles.detailsRow}>
+            <Image
+              source={require('./android/app/src/main/res/mipmap-hdpi/i4.jpeg')}
+              style={{ width: 20, height: 20, marginRight: 10 }}
+            />
+            <Text style={styles.label}>Email          :</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={(text) => setEmail(text)}
+            />
+          </View>
+          <View style={styles.detailsRow}>
+            <Image
+              source={require('./android/app/src/main/res/mipmap-hdpi/i5.jpeg')}
+              style={{ width: 20, height: 20, marginRight: 10 }}
+            />
+            <Text style={styles.label}>Number     :</Text>
+            <TextInput
+              style={styles.input}
+              value={number}
+              onChangeText={(text) => setNumber(text)}
+            />
+          </View>
+          <View style={styles.detailsRow}>
+            <Image
+              source={require('./android/app/src/main/res/mipmap-hdpi/i6.jpeg')}
+              style={{ width: 20, height: 20, marginRight: 10 }}
+            />
+            <Text style={styles.label}>Group        :</Text>
+            <Text style={styles.value}>{groupe}</Text>
+          </View>
           <TouchableOpacity style={styles.button} onPress={handleSubmit}>
             <Text style={styles.buttonText}>Submit</Text>
           </TouchableOpacity>
@@ -142,24 +188,56 @@ const styles = StyleSheet.create({
   detailsContainer: {
     alignItems: 'center',
   },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  change: {
+    color: 'black',
+    fontWeight: 'bold'
+  },
+
+  profileImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100, // pour rendre l'image circulaire
+    marginBottom: 10,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 6
+  },
   label: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginRight: 10,
   },
-  input: {
+  value: {
+    flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
+    borderRadius: 120,
     padding: 10,
-    marginBottom: 15,
-    width: '100%',
+    fontSize: 15,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 120,
+    padding: 10,
+    fontSize: 15,
+
   },
   button: {
-    backgroundColor: 'blue',
+    backgroundColor: 'black',
     padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
+    borderRadius: 20,
+    marginTop: 25,
+    width: 120,
+    height: 40
   },
   buttonText: {
     color: 'white',

@@ -1,22 +1,24 @@
-import React, { useState, useRef,useEffect } from 'react';
-import { ScrollView, View, Button, Image, StyleSheet, Animated, Text, TouchableOpacity, Modal, Dimensions, useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { ScrollView, View, Button, Image, StyleSheet, Animated, Text, TouchableOpacity, Modal, Dimensions, useWindowDimensions, ToastAndroid } from 'react-native';
 import * as ImagePicker from 'react-native-image-picker';
 import { NativeModules } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 import RNFS from 'react-native-fs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { PinchGestureHandler,GestureHandlerRootView, State } from 'react-native-gesture-handler';
+import { PinchGestureHandler, GestureHandlerRootView, State } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AsyncStorageManager from './AsyncStorageManager';
 import ViewShot from 'react-native-view-shot';
 import axios from 'axios';
+import AppConfig from './config';
+
 const Home = () => {
-  const [images,setImages]= useState([])
+  const [images, setImages] = useState([])
   const [imageURI, setImageURI] = useState('')
-  const [color_text_1,setColorText_1] = useState('green')
-  const [confirmVsible,setConfirmVisible] = useState(false)
-  const [color_text_2,setColorText_2] = useState('green')
-  const [color_text_3,setColorText_3] = useState('green')
+  const [color_text_1, setColorText_1] = useState('green')
+  const [confirmVsible, setConfirmVisible] = useState(false)
+  const [color_text_2, setColorText_2] = useState('green')
+  const [color_text_3, setColorText_3] = useState('green')
   const [zoomVisible, setZoomVisible] = useState(false);
   const [imagesForViewer, setImagesForViewer] = useState([]);
   const [processedImageToDisplay, setProcessedImage] = useState(null);
@@ -33,8 +35,8 @@ const Home = () => {
   const [popupvisible, setPopupVisible] = useState(false)
   const [isFinishVisible, setFinishVisible] = useState(true)
   const [imagepopup, setImagePopup] = useState(false)
-  const [deptext,setDepText] = useState('')
-  const [excessif,setExcissif]=useState(false)
+  const [deptext, setDepText] = useState('')
+  const [excessif, setExcissif] = useState(false)
   const scaleValue = useRef(new Animated.Value(1)).current;
   const scaleValue_reset = useRef(new Animated.Value(1)).current;
   const scaleValue_next = useRef(new Animated.Value(1)).current;
@@ -43,54 +45,59 @@ const Home = () => {
   const scaleValue_logout = useRef(new Animated.Value(1)).current;
   const scaleValue_image = useRef(new Animated.Value(1)).current;
   const scaleValue_camera = useRef(new Animated.Value(1)).current;
-  const scaleValue_send= useRef(new Animated.Value(1)).current;
- const [iscloseddep,setClosedDep] = useState(false)
+  const scaleValue_send = useRef(new Animated.Value(1)).current;
+  const [iscloseddep, setClosedDep] = useState(false)
   const baseScale = useRef(new Animated.Value(1)).current;
   const pinchScale = useRef(new Animated.Value(1)).current;
   const panState = useRef(0).current;
   const translateX = useRef(new Animated.Value(0)).current;
-const translateY = useRef(new Animated.Value(0)).current;
-const lastOffset = useRef({ x: 0, y: 0 }).current;
-const [selectedValue, setSelectedValue] = useState(null);
-const viewRef = useRef();
-const [idtp, setCode] = useState('');
-useEffect(() => {
-  const getcode = async () => {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const lastOffset = useRef({ x: 0, y: 0 }).current;
+  const [cvg, setConvergence] = useState('');
+  const viewRef = useRef();
+  const [idtp, setCode] = useState('');
+  const currentDate = new Date();
+  useEffect(() => {
+    const getcode = async () => {
       try {
-          let data = await AsyncStorage.getItem('tpID');
-          setCode(data);
+        let data = await AsyncStorage.getItem('tpID');
+        let data2 = await AsyncStorage.getItem('pw');
+        data2 = JSON.parse(data2);
+        setConvergence(data2.convergence)
+        console.log(cvg);
+        setCode(data);
       } catch (error) {
-          console.error('Error fetching code: ', error);
+        console.error('Error fetching code: ', error);
       }
+    };
+
+    getcode();
+  }, []);
+  const [id, setId] = useState('');
+
+  useEffect(() => {
+    const getId = async () => {
+      try {
+        let data = await AsyncStorage.getItem('user');
+        data = JSON.parse(data);
+        // Extraire la valeur de la clé "code"
+        const Id = data.id;
+        setId(Id);
+      } catch (error) {
+        console.error('Error fetching code: ', error);
+      }
+    };
+
+    getId();
+  }, []);
+
+  const placeholder = {
+    label: 'Select an option...',
+    value: null,
   };
+  const onSend = async () => {
 
-  getcode();
-}, []);
-const [id, setId] = useState('');
 
-    useEffect(() => {
-        const getId = async () => {
-            try {
-                let data = await AsyncStorage.getItem('user');
-                data = JSON.parse(data);
-                // Extraire la valeur de la clé "code"
-                const Id = data.id;
-                setId(Id);
-            } catch (error) {
-                console.error('Error fetching code: ', error);
-            }
-        };
-
-        getId();
-    }, []);
-
-const placeholder = {
-  label: 'Select an option...',
-  value: null,
-};
-const onSend = async () => {
-
- 
     Animated.sequence([
       Animated.timing(scaleValue_send, {
         toValue: 0.8,
@@ -115,21 +122,21 @@ const onSend = async () => {
 
 
 
-}
-const options = [
-  { label: 'Option 1', value: 'option1' },
-  { label: 'Option 2', value: 'option2' },
-  { label: 'Option 3', value: 'option3' },
-];
+  }
+  const options = [
+    { label: 'Option 1', value: 'option1' },
+    { label: 'Option 2', value: 'option2' },
+    { label: 'Option 3', value: 'option3' },
+  ];
 
   const onPinchGestureEvent = Animated.event(
     [
       {
         nativeEvent: {
-          
+
           scale: pinchScale,
-        
-        
+
+
         },
       },
     ],
@@ -147,7 +154,7 @@ const options = [
       panState.current = 1;
     }
   };
-  const onLogout = async () =>{
+  const onLogout = async () => {
     Animated.sequence([
       Animated.timing(scaleValue_logout, {
         toValue: 0.8,
@@ -161,8 +168,8 @@ const options = [
       }),
     ]).start(() => {
       // Logic executed after animation completion (using setTimeout for delay)
-      setTimeout(async() => {
-    await AsyncStorageManager.signOut()
+      setTimeout(async () => {
+        await AsyncStorageManager.signOut()
       });
     })
   }
@@ -230,16 +237,16 @@ const options = [
           maxWidth: 1000,
           maxHeight: 1000,
         };
-      
-    
+
+
         try {
-          if(processedImageToDisplay){
+          if (processedImageToDisplay) {
             setWichtButton('Take Photo')
             setConfirmVisible(true)
-            
-          }else{
+
+          } else {
             ImagePicker.launchCamera(options, (response) => {
-           
+
               if (!response.didCancel) {
                 // Handle the response...
                 setImageURI(response.assets[0].uri);
@@ -256,7 +263,7 @@ const options = [
         }
       }, 50); // Adjust the delay duration as needed
     });
-    
+
 
   };
   const selectImage = () => {
@@ -283,27 +290,27 @@ const options = [
           maxWidth: 1000,
           maxHeight: 1000,
         };
-        if(processedImageToDisplay){
+        if (processedImageToDisplay) {
           setWichtButton('selectimage')
           setConfirmVisible(true)
-          
-        }else{
-        ImagePicker.launchImageLibrary(options, (response) => {
-          if (!response.didCancel && !response.error) {
-            setImageURI(response.assets[0].uri);
-            setImagesForViewer([{ url: response.assets[0].uri }]);
-            setConter(1)
-            convertImageToBase64(response.assets[0].uri);
-            setPoints([]);
-          }
-        });
+
+        } else {
+          ImagePicker.launchImageLibrary(options, (response) => {
+            if (!response.didCancel && !response.error) {
+              setImageURI(response.assets[0].uri);
+              setImagesForViewer([{ url: response.assets[0].uri }]);
+              setConter(1)
+              convertImageToBase64(response.assets[0].uri);
+              setPoints([]);
+            }
+          });
         }
       }, 50); // Adjust the delay duration as needed
     });
 
   };
-  const onreset = async() => {
-  
+  const onreset = async () => {
+
     Animated.sequence([
       Animated.timing(scaleValue_reset, {
         toValue: 0.8,
@@ -320,7 +327,7 @@ const options = [
       setTimeout(() => {
         setWichtButton('reset')
         setConfirmVisible(true)
-       
+
       }, 50); // Adjust the delay duration as needed
     });
 
@@ -341,39 +348,39 @@ const options = [
 
             setProcessedImage(result['processedImage']);
             setCountourPoints(result['tracedPoints'])
-           
+
           });
         };
         reader.readAsDataURL(blob);
       });
   };
-  const [name,setName] = useState('')
-  const getDetail = async () =>{
+  const [name, setName] = useState('')
+  const getDetail = async () => {
     let data = await AsyncStorage.getItem('user')
     data = JSON.parse(data)
-    
-   return setName(data["userName"])
+
+    return setName(data["userName"])
   }
   getDetail()
-  const renderDrawings =  () => {
-    
+  const renderDrawings = () => {
+
     const extendedLines = calculateExtendedLines();
     const verticalLines = calculateVerticalLines();
     const intersectionpointrender = findIntersectionPoint();
     const individualintersectionpoint = intersectionpointrender[0]
-  
+
     if (!angles.some(item => item.id === counter) && points.length == 4) {
       // If the ID doesn't exist, add a new element
       const left_taper_push_1 = 90 - intersectionpointrender[3]
-      const right_taper_push_1 = 90-intersectionpointrender[4]
+      const right_taper_push_1 = 90 - intersectionpointrender[4]
       const left_taper_push = intersectionpointrender[3]
-      const right_taper_push =intersectionpointrender[4]
-      
-      if(counter==1){
-       
-        angles.push({ id: intersectionpointrender[1], 'intersection_angle': intersectionpointrender[2], 'left_taper': left_taper_push_1.toFixed(2)  , 'right_taper': right_taper_push_1.toFixed(2) })
+      const right_taper_push = intersectionpointrender[4]
 
-      }else{
+      if (counter == 1) {
+
+        angles.push({ id: intersectionpointrender[1], 'intersection_angle': intersectionpointrender[2], 'left_taper': left_taper_push_1.toFixed(2), 'right_taper': right_taper_push_1.toFixed(2) })
+
+      } else {
 
         angles.push({ id: intersectionpointrender[1], 'intersection_angle': intersectionpointrender[2], 'left_taper': left_taper_push.toFixed(2), 'right_taper': right_taper_push.toFixed(2) })
 
@@ -381,7 +388,7 @@ const options = [
 
     }
 
-    
+
 
 
 
@@ -391,27 +398,27 @@ const options = [
         {points.map((point, index) => (
           <Circle key={index} cx={point.x} cy={point.y} r={2} fill="blue" />
         ))}
-      
 
-       
-      
-            <View style={{ left: points[0]?.x, top: points[0]?.y}}>
-                <Text style={{color:'red'}}> {angles[counter-1]?.left_taper} </Text>
-                </View>
 
-                <View style={{ left: points[2]?.x, top: points[2]?.y}}>
-                <Text style={{color:'red'}}> {angles[counter-1]?.right_taper} </Text>
-                </View>
-        { intersectionpointrender[0].map((intersection, index) => (
-          
+
+
+        <View style={{ left: points[0]?.x, top: points[0]?.y }}>
+          <Text style={{ color: 'red' }}> {angles[counter - 1]?.left_taper} </Text>
+        </View>
+
+        <View style={{ left: points[2]?.x, top: points[2]?.y }}>
+          <Text style={{ color: 'red' }}> {angles[counter - 1]?.right_taper} </Text>
+        </View>
+        {intersectionpointrender[0].map((intersection, index) => (
+
           <Circle key={index} cx={intersection.x} cy={intersection.y} r={2} fill="blue" />
         ))}
-               
-      {counter==3 && intersectionpointrender[0].map((intersection, index) => (
-                <View key={index} style={{ left: intersection.x, top: intersection.y }}>
-                <Text style={{color:'red'}}> {angles[counter-1]?.intersection_angle} </Text>
-                </View>
-        
+
+        {counter == 3 && intersectionpointrender[0].map((intersection, index) => (
+          <View key={index} style={{ left: intersection.x, top: intersection.y }}>
+            <Text style={{ color: 'red' }}> {angles[counter - 1]?.intersection_angle} </Text>
+          </View>
+
         ))}
         {extendedLines.map((line, index) => (
           <Line
@@ -623,9 +630,9 @@ const options = [
       }),
     ]).start(() => {
       // Logic executed after animation completion (using setTimeout for delay)
-      setTimeout(async() => {
-        setConter(counter - 1 )
-      
+      setTimeout(async () => {
+        setConter(counter - 1)
+
       }, 50); // Adjust the delay duration as needed
     });
 
@@ -644,12 +651,12 @@ const options = [
         useNativeDriver: true,
       }),
     ]).start(() => {
- 
+
       // Logic executed after animation completion (using setTimeout for delay)
-      setTimeout(async() => {
+      setTimeout(async () => {
         setWichtButton('nextangle')
         setConfirmVisible(true)
-      
+
 
 
       }, 50); // Adjust the delay duration as needed
@@ -662,7 +669,7 @@ const options = [
 
   }
   const closeModalDep = () => {
-   
+
     setClosedDep(false)
 
   }
@@ -671,7 +678,7 @@ const options = [
     setClosedDep(true)
 
   }
-  
+
   const closeImageModal = () => {
     setImagePopup(false)
 
@@ -683,118 +690,134 @@ const options = [
   const openCofirmModal = () => {
     setConfirmVisible(true)
   }
-  const [wichbutton,setWichtButton] = useState('')
+  const [wichbutton, setWichtButton] = useState('')
   const onconfirmed = async () => {
-    if(wichbutton=='nextangle'){
-    try {
-      const uri = await viewRef.current.capture();
+    if (wichbutton == 'nextangle') {
+      try {
+        const uri = await viewRef.current.capture();
 
-      // Convert the captured image to base64
-      const base64 = await convertToBase64(uri);
-      images.push(base64)         
+        // Convert the captured image to base64
+        const base64 = await convertToBase64(uri);
+        images.push(base64)
 
-    } catch (error) {
-      console.error('Error while capturing image:', error);
-    }
-  setPoints([])
-  setConter(counter + 1)
-  setConfirmVisible(false)
-  }else if (wichbutton=='reset'){
-    setPoints([])
-    const updatedData = angles.filter(item => item.id !== counter);
-    setAngles(updatedData);
-    setConfirmVisible(false)
-  }else if(wichbutton=='Take Photo'){
-    ImagePicker.launchCamera(options, (response) => {
-           
-      if (!response.didCancel) {
-        // Handle the response...
-        setImageURI(response.assets[0].uri);
-        setImagesForViewer([{ url: response.assets[0].uri }]);
-        setConter(1)
-        convertImageToBase64(response.assets[0].uri);
-        setPoints([]);
+      } catch (error) {
+        console.error('Error while capturing image:', error);
       }
-    });
-    setConfirmVisible(false)
-  }else if(wichbutton=='selectimage'){
-    ImagePicker.launchImageLibrary(options, (response) => {
-      if (!response.didCancel && !response.error) {
-        setImageURI(response.assets[0].uri);
-        setImagesForViewer([{ url: response.assets[0].uri }]);
-        setConter(1)
-        convertImageToBase64(response.assets[0].uri);
-        setPoints([]);
-      }
-    });
-    setConfirmVisible(false)
-  }else{
-    const endpoint = 'http://192.168.0.92:5050/etudiant/saveStudentPW';
-    const url = endpoint;
-    try {
-        try {
-            const uri = await viewRef.current.capture();
+      setPoints([])
+      setConter(counter + 1)
+      setConfirmVisible(false)
+    } else if (wichbutton == 'reset') {
+      setPoints([])
+      const updatedData = angles.filter(item => item.id !== counter);
+      setAngles(updatedData);
+      setConfirmVisible(false)
+    } else if (wichbutton == 'Take Photo') {
+      ImagePicker.launchCamera(options, (response) => {
+
+        if (!response.didCancel) {
+          // Handle the response...
+          setImageURI(response.assets[0].uri);
+          setImagesForViewer([{ url: response.assets[0].uri }]);
+          setConter(1)
+          convertImageToBase64(response.assets[0].uri);
+          setPoints([]);
+        }
+      });
+      setConfirmVisible(false)
+    } else if (wichbutton == 'selectimage') {
+      ImagePicker.launchImageLibrary(options, (response) => {
+        if (!response.didCancel && !response.error) {
+          setImageURI(response.assets[0].uri);
+          setImagesForViewer([{ url: response.assets[0].uri }]);
+          setConter(1)
+          convertImageToBase64(response.assets[0].uri);
+          setPoints([]);
+        }
+      });
+      setConfirmVisible(false)
+    } else {
+      setConfirmVisible(false);
       
-            // Convert the captured image to base64
-            const base64 = await convertToBase64(uri);
-            images.push(base64)         
+      const endpoint = AppConfig.etudiantUrl + '/saveStudentPW';
+      const url = endpoint;
+      try {
+        try {
+          const uri = await viewRef.current.capture();
 
-          } catch (error) {
-            console.error('Error while capturing image:', error);
-          }
+          // Convert the captured image to base64
+          const base64 = await convertToBase64(uri);
+          images.push(base64)
+
+        } catch (error) {
+          console.error('Error while capturing image:', error);
+        }
         let internes = ''
         let externes = ''
         let depouille = ''
         let image1 = ''
         let image2 = ''
         let image3 = ''
+        let convergence = ''
         angles?.map(item => {
-            if (item?.id == 1){
-                internes = 'left taper: '+item.left_taper+' right taper: '+item.right_taper
-                image1 = images[0]
-            }else if (item?.id == 2){
-                externes = 'left taper: '+item.left_taper+' right taper: '+item.right_taper
-                image2 = images[1]
-            }else {
-                depouilles = 'left taper: '+item.left_taper+' right taper: '+item.right_taper + 'angles de convergences: '+item.intersection_angle
-                image3 = images[2]
-            }
+          if (item?.id == 1) {
+            internes = 'left: ' + item.left_taper + '  right: ' + item.right_taper
+            image1 = images[0]
+          } else if (item?.id == 2) {
+            externes = 'left: ' + item.left_taper + '  right: ' + item.right_taper
+            image2 = images[1]
+          } else {
+            depouille = 'left: ' + item.left_taper + '  right: ' + item.right_taper
+            convergence = parseFloat(item.left_taper) + parseFloat(item.right_taper)
+            image3 = images[2]
+          }
         })
-        
+
+        let note;
+        let convint = parseInt(convergence, 10);
+        let cvgint = parseInt(cvg, 10);
+
+        if (convint >= cvgint - 2 && convint <= cvgint + 2) {
+          note = 18;
+        } else if (convint >= cvgint - 4 && convint <= cvgint + 4) {
+          note = 14;
+        } else if (convint >= cvgint - 6 && convint <= cvgint + 6) {
+          note = 10;
+        } else {
+          note = 8;
+        }
+
         const response = await axios.post(url, {
-            "internes": internes,
-            "externes": externes,
-            "depouilles":depouilles,
-            "image1": image1,
-            "image2": image2,
-            "image3": image3,
-            "date": "2024-01-06",
-            "time": "15:30:00",
-            "note": 17,
-            "student": {
-              "id": id
-            },
-            "pw": {
-              "id":idtp
+          "internes": internes,
+          "externes": externes,
+          "depouilles": depouille,
+          "convergence": convergence,
+          "image1": image1,
+          "image2": image2,
+          "image3": image3,
+          "date": currentDate.toISOString().split('T')[0],
+          "time": currentDate.toISOString().split('T')[1].split('.')[0],
+          "note": note,
+          "student": {
+            "id": id
+          },
+          "pw": {
+            "id": idtp
+          }
+        });
 
-            }
-          });
-  
-        // Handle successful response
 
-        
-        // Extract and handle data or navigate to another screen
+        ToastAndroid.show('Lab Sent Succesfully', ToastAndroid.SHORT);
       } catch (error) {
         // Handle errors or show an error message
         console.error('Error:', error);
-  
+
         // Show a toast or error message to the user
         ToastAndroid.show('Error: Authentication failed', ToastAndroid.SHORT);
       }
-  }
+    }
 
 
-  
+
   }
 
   const openImageModal = () => {
@@ -833,53 +856,53 @@ const options = [
     ]).start(() => {
       // Logic executed after animation completion (using setTimeout for delay)
       setTimeout(() => {
-        let sum =  0
-        for(i=0;i<3;i++){
+        let sum = 0
+        for (i = 0; i < 3; i++) {
 
           sum = parseFloat(angles[i]?.left_taper) + parseFloat(angles[i]?.right_taper)
-          if (  sum > 16 && sum <= 21) {
-            if(i==0){
+          if (sum > 16 && sum <= 21) {
+            if (i == 0) {
               setColorText_1('orange');
-            }else if(i==1){
+            } else if (i == 1) {
               setColorText_2('orange');
-            }else if(i==2){
+            } else if (i == 2) {
               setColorText_3('orange');
-            } 
-            
-        } else if (sum > 21 || (sum >= 4 && sum< 6) || sum< 4) {
-          if(i==0){
-            setColorText_1('red');
-          }else if(i==1){
-            setColorText_2('red');
-          }else if(i==2){
-            setColorText_3('red');
+            }
+
+          } else if (sum > 21 || (sum >= 4 && sum < 6) || sum < 4) {
+            if (i == 0) {
+              setColorText_1('red');
+            } else if (i == 1) {
+              setColorText_2('red');
+            } else if (i == 2) {
+              setColorText_3('red');
+            }
+
+          } else {
+            if (i == 0) {
+              setColorText_1('green');
+            } else if (i == 1) {
+              setColorText_2('green');
+            } else if (i == 2) {
+              setColorText_3('green');
+            }
           }
-       
-        }else{
-          if(i==0){
-            setColorText_1('green');
-          }else if(i==1){
-            setColorText_2('green');
-          }else if(i==2){
-            setColorText_3('green');
-          }
-        }
 
         }
         if (sum >= 6 && sum <= 16) {
           setDepText('Excellente performance');
           setExcissif(false)
-      } else if (sum > 0 && sum < 6) {
-        setDepText('Performance insatisfaisante');
-        setExcissif(false)
-      } else if (sum > 16) {
-        setDepText('Performance insatisfaisante : Dépouille excessive');
-        setExcissif(true)
-      } else {
-        setDepText('Médiocre');
-        setExcissif(false)
-      }
-      
+        } else if (sum > 0 && sum < 6) {
+          setDepText('Performance insatisfaisante');
+          setExcissif(false)
+        } else if (sum > 16) {
+          setDepText('Performance insatisfaisante : Dépouille excessive');
+          setExcissif(true)
+        } else {
+          setDepText('Médiocre');
+          setExcissif(false)
+        }
+
         setPopupVisible(true)
 
       }, 50); // Adjust the delay duration as needed
@@ -906,20 +929,20 @@ const options = [
   }, [points]);
 
   const onBeforeAngle = () => {
-    if (counter > 1 ) {
-      
+    if (counter > 1) {
+
       setVisibleBefore(false)
 
-  }else{
-    setVisible(true)
-  }
+    } else {
+      setVisible(true)
+    }
 
   }
 
   React.useEffect(() => {
     onBeforeAngle();
   }, [counter]);
- 
+
   const findIntersection = (p1, p2, p3, p4) => {
     const x1 = p1.x;
     const y1 = p1.y;
@@ -945,313 +968,317 @@ const options = [
     return { x, y };
   };
   return (
- 
+
     <GestureHandlerRootView style={styles.container}>
-        <ScrollView>
-        <View style={{alignItems:'center' }}><Text style={{color:'green',marginBottom:20}}>Welcome {name}</Text></View>
-      <View style={{ flexDirection: 'row',justifyContent:'center' }}>
-        
-        <View style={{ marginRight: 10, alignItems: 'center' }}>
-          <Animated.View style={{ transform: [{ scale: scaleValue_camera }] }}>
-            <Icon name="photo-camera" size={40} color="brown" onPress={takePhoto} />
-            <Text style={styles.fancyText}>Camera</Text>
+      <ScrollView>
+        <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+
+          <View style={{ marginRight: 10, alignItems: 'center' }}>
+            <Animated.View style={{ transform: [{ scale: scaleValue_camera }] }}>
+              <Icon name="photo-camera" size={40} color="brown" onPress={takePhoto} />
+              <Text style={styles.fancyText}>Camera</Text>
+            </Animated.View>
+          </View>
+          <View style={{ marginRight: 10, marginLeft: 10, alignItems: 'center' }}>
+            <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+              <Icon name="image" size={40} color="blue" onPress={selectImage} />
+              <Text style={styles.fancyText}>Gallery</Text>
+            </Animated.View>
+          </View>
+          <Animated.View style={{ marginLeft: 10, marginRight: 10, alignItems: 'center', transform: [{ scale: scaleValue_reset }] }}>
+            <Icon name="replay" size={40} color="red" onPress={onreset} />
+            <Text style={styles.fancyText}>Reset</Text>
           </Animated.View>
+
+          {visible ? (
+            <View style={{ marginLeft: 10, alignItems: 'center' }}>
+              <Icon disabled={visible} name="navigate-next" size={40} color='gray' />
+              <Text style={styles.fancyText} >Next</Text>
+            </View>
+          ) : (
+            <Animated.View style={{ marginLeft: 10, alignItems: 'center', transform: [{ scale: scaleValue_next }] }}>
+
+
+              <Icon disabled={visible} name="navigate-next" size={40} onPress={goNextAngle} color="green" />
+              <Text style={styles.fancyText}>Next</Text>
+
+            </Animated.View>
+          )}
+
+
         </View>
-        <View style={{ marginRight: 10, marginLeft: 10, alignItems: 'center' }}>
-          <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-            <Icon name="image" size={40} color="blue" onPress={selectImage} />
-            <Text style={styles.fancyText}>Gallery</Text>
-          </Animated.View>
+
+        <View style={styles.imageContainer} >
+          {processedImageToDisplay && (
+
+            <PinchGestureHandler
+              onGestureEvent={onPinchGestureEvent}
+              onHandlerStateChange={onPinchHandlerStateChange}>
+
+              <Animated.View style={transformStyle}>
+                <ViewShot ref={viewRef}>
+
+
+
+
+                  <TouchableOpacity activeOpacity={0.95} onPress={handlePress} style={{ overflow: 'hidden' }}>
+
+                    <Image
+                      onLoad={onImageLoad}
+                      resizeMode="contain"
+                      source={{ uri: `data:image/png;base64,${processedImageToDisplay}` }}
+                      style={{
+                        width: imageDimensions.width,
+                        height: imageDimensions.height,
+
+                      }}
+
+                    />
+                    <Svg
+                      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                    >
+                      {renderDrawings()}
+                    </Svg>
+
+                  </TouchableOpacity>
+                </ViewShot>
+              </Animated.View>
+            </PinchGestureHandler>
+          )}
         </View>
-        <Animated.View style={{ marginLeft: 10, marginRight: 10, alignItems: 'center', transform: [{ scale: scaleValue_reset }] }}>
-          <Icon name="replay" size={40} color="red" onPress={onreset} />
-          <Text style={styles.fancyText}>Reset</Text>
-        </Animated.View>
 
-        {visible ? (
-          <View style={{ marginLeft: 10, alignItems: 'center' }}>
-            <Icon disabled={visible} name="navigate-next" size={40} color='gray' />
-            <Text style={styles.fancyText} >Next</Text>
+        {!imageURI && !processedImageToDisplay && (
+          <View style={styles.placeholder}>
+            <Text style={styles.fancyText}>No image selected</Text>
           </View>
-        ) : (
-          <Animated.View style={{ marginLeft: 10, alignItems: 'center', transform: [{ scale: scaleValue_next }] }}>
-
-
-            <Icon disabled={visible} name="navigate-next" size={40} onPress={goNextAngle} color="green" />
-            <Text style={styles.fancyText}>Next</Text>
-
-          </Animated.View>
         )}
-
-        
-      </View>
-
-      <View style={styles.imageContainer} >
-        {processedImageToDisplay && (
-
-              <PinchGestureHandler
-                    onGestureEvent={onPinchGestureEvent}
-                    onHandlerStateChange={onPinchHandlerStateChange}>
-          
-                      <Animated.View  style={transformStyle}>
-                      <ViewShot ref={viewRef}>
-           
-
-     
-
-          <TouchableOpacity activeOpacity={0.95} onPress={handlePress} style={{ overflow: 'hidden'}}>
-         
-            <Image
-              onLoad={onImageLoad}
-              resizeMode="contain"
-              source={{ uri: `data:image/png;base64,${processedImageToDisplay}` }}
-              style={{
-                width: imageDimensions.width,
-                height: imageDimensions.height,
-              
-              }}
-              
-            />
-            <Svg
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            >
-              {renderDrawings()}
-            </Svg>
-           
-          </TouchableOpacity>
-         </ViewShot>
-          </Animated.View>
-          </PinchGestureHandler>
-        )}
-      </View>
-
-      {!imageURI && !processedImageToDisplay && (
-        <View style={styles.placeholder}>
-          <Text style={styles.fancyText}>No image selected</Text>
+        <View style={{ marginTop: 10, marginBottom: 12, alignItems: 'center' }}>
+          <Text style={styles.fancyText}>
+            {counter === 1 ?
+              'Step 1. Internal (G-D)'
+              : counter == 2 ? 'Step 2. External (G-D)' : counter == 3 ? 'Step 3. draft angles (G-D)' : ''}</Text>
         </View>
-      )}
-     <View style={{ marginTop: 10,marginBottom:12,alignItems:'center' }}>
-        <Text style={styles.fancyText}>        
-        { counter === 1 ?
-            'Etape 1. Versants internes (G-D)'
-            : counter == 2 ? 'Etape 2. Versants externes (G-D)' : counter == 3 ? 'Etape 3. Angles de dépouille (G-D)': ''}</Text>
-      </View>
 
-      {imageURI &&
-      <View style={{ flexDirection: 'row',justifyContent:'center' }}>
+        {imageURI &&
+          <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 
-        <Animated.View style={{ transform: [{ scale: scaleValue_logout }] ,marginRight:30}}>
-        <View style={{ alignItems: 'center' }}>
-          <Icon name="logout" size={40}  color="green" onPress={onLogout} />
-          <Text style={styles.fancyText}>Logout</Text>
-          </View>
-        </Animated.View>
-        <Animated.View style={{ transform: [{ scale: scaleValue_analytics }] ,marginRight:30}}>
-        <View style={{ alignItems: 'center' }}>
-          <Icon name="analytics" size={40}  color="green" onPress={openModal} />
-          <Text style={styles.fancyText}>Results</Text>
-          </View>
-        </Animated.View>
-      
-        <Animated.View style={{ transform: [{ scale: scaleValue_image }] }}>
-        <View style={{  alignItems: 'center' }}>
-          <Icon name="image" size={40}  color="blue" onPress={openImageModal} />
-          <Text style={styles.fancyText}>Original Image</Text>
-          </View>
-        </Animated.View>
-        {counter==3 && points.length==4 ? (
-          <Animated.View style={{ marginLeft: 10, marginRight: 10, alignItems: 'center', transform: [{ scale: scaleValue_send }] }}>
-<Icon   name="check" size={40} color="green" onPress={onSend} />
-<Text style={styles.fancyText}>Send</Text>
-</Animated.View>
-        ) : (
-    
-          <View style={{ marginLeft: 10, alignItems: 'center' }}>
-            <Icon  name="check" size={40} color="gray" />
-          <Text style={styles.fancyText}>Send</Text>
-          </View>
-
-
-        )}
-
-      
-      </View>
-}
-
-<Modal
-        animationType="fade" // Animation type for the modal (slide, fade, etc.)
-        transparent={true} // Whether the modal is transparent or not
-        visible={confirmVsible} // Controls the visibility of the modal
-
-
-      >
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          {/* Content of the modal */}
-          <View style={{ backgroundColor: 'white', padding: 20 ,alignContent:'center',alignItems:'center'}}>
-            <Text style={{marginBottom:10}}>Are you sure to{wichbutton =='Take Photo' ? ' change the picture you will lose all acheivements': 
-            wichbutton=='selectimage' ? ' change the picture you will lose all acheivements' : wichbutton=='send'?' send the PW':wichbutton == 'nextangle'?' go to next angle':' reset'}</Text>
-            
-            <View style={{flexDirection:'row'}} >
-              <View style={{marginRight:10}}>
-              <Button  title="Proceed" onPress={onconfirmed} />
+            <Animated.View style={{ transform: [{ scale: scaleValue_logout }], marginRight: 30 }}>
+              <View style={{ alignItems: 'center' }}>
+                <Icon name="logout" size={40} color="green" onPress={onLogout} />
+                <Text style={styles.fancyText}>Logout</Text>
               </View>
-              <View >
-              <Button   title="Cancel" onPress={closeConfirmModal} />
+            </Animated.View>
+            <Animated.View style={{ transform: [{ scale: scaleValue_analytics }], marginRight: 30 }}>
+              <View style={{ alignItems: 'center' }}>
+                <Icon name="analytics" size={40} color="green" onPress={openModal} />
+                <Text style={styles.fancyText}>Results</Text>
               </View>
-      
-        </View>
-          
+            </Animated.View>
+
+            <Animated.View style={{ transform: [{ scale: scaleValue_image }] }}>
+              <View style={{ alignItems: 'center' }}>
+                <Icon name="image" size={40} color="blue" onPress={openImageModal} />
+                <Text style={styles.fancyText}>Original Image</Text>
+              </View>
+            </Animated.View>
+            {counter == 3 && points.length == 4 ? (
+              <Animated.View style={{ marginLeft: 10, marginRight: 10, alignItems: 'center', transform: [{ scale: scaleValue_send }] }}>
+                <Icon name="check" size={40} color="green" onPress={onSend} />
+                <Text style={styles.fancyText}>Send</Text>
+              </Animated.View>
+            ) : (
+
+              <View style={{ marginLeft: 10, alignItems: 'center' }}>
+                <Icon name="check" size={40} color="gray" />
+                <Text style={styles.fancyText}>Send</Text>
+              </View>
+
+
+            )}
+
+
           </View>
+        }
+
+        <Modal
+          animationType="fade" // Animation type for the modal (slide, fade, etc.)
+          transparent={true} // Whether the modal is transparent or not
+          visible={confirmVsible} // Controls the visibility of the modal
+
+
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            {/* Content of the modal */}
+            <View style={{ backgroundColor: 'white', padding: 20, alignContent: 'center', alignItems: 'center' }}>
+              <Text style={{ marginBottom: 10 }}>Are you sure to{wichbutton == 'Take Photo' ? ' change the picture you will lose all acheivements' :
+                wichbutton == 'selectimage' ? ' change the picture you will lose all acheivements' : wichbutton == 'send' ? ' send the PW' : wichbutton == 'nextangle' ? ' go to next angle' : ' reset'}</Text>
+
+              <View style={{ flexDirection: 'row' }} >
+                <TouchableOpacity style={styles.button} onPress={onconfirmed} >
+                  <Text style={styles.buttonText}>Proceed</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={onconfirmed} >
+                  <Text style={styles.buttonText} onPress={closeConfirmModal}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+
+            </View>
           </View>
-      
+
         </Modal>
 
 
-      <Modal
-        animationType="fade" // Animation type for the modal (slide, fade, etc.)
-        transparent={true} // Whether the modal is transparent or not
-        visible={popupvisible} // Controls the visibility of the modal
+        <Modal
+          animationType="fade" // Animation type for the modal (slide, fade, etc.)
+          transparent={true} // Whether the modal is transparent or not
+          visible={popupvisible} // Controls the visibility of the modal
 
 
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          {/* Content of the modal */}
-          <View style={{ backgroundColor: 'white', padding: 20 }}>
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            {/* Content of the modal */}
+            <View style={{ backgroundColor: 'white', padding: 20 }}>
 
-            {angles.map((item, index) => (
-              
-              <View key={index} style={{ marginTop: 10, marginBottom: 10 }}>
-               
-                {item.id == 1 && (
-                  
+              {angles.map((item, index) => (
+
+                <View key={index} style={{ marginTop: 10, marginBottom: 10 }}>
+
+                  {item.id == 1 && (
+
                     <View>
-              
-                        <Text style={{color:color_text_1}}>Les versants internes :</Text>
-                        <Text style={{color:color_text_1}}>Lingual à 15 de l'horizontal : {item.left_taper}</Text>
-                        <Text style={{color:color_text_1}} >Vestibulaire à 45 de l'horizontal : {item.right_taper}</Text>
+
+                      <Text style={{ color: color_text_1 }}>Les versants internes :</Text>
+                      <Text style={{ color: color_text_1 }}>Lingual à 15 de l'horizontal : {item.left_taper}</Text>
+                      <Text style={{ color: color_text_1 }} >Vestibulaire à 45 de l'horizontal : {item.right_taper}</Text>
                     </View>
-                   
-                )}
-                {item.id == 2 && (
+
+                  )}
+                  {item.id == 2 && (
                     <View>
-                        
-                        <Text style={{color:color_text_2}} >Les versants externes :</Text>
-                        <Text style={{color:color_text_2}}>Lingual à 15 de l'horizontal : {item.left_taper}</Text>
-                        <Text style={{color:color_text_2}}>Vestibulaire à 45 de l'horizontal : {item.right_taper}</Text>
-                    </View>
-                   
-                )}
 
-                {item.id == 3 && (
-                  
+                      <Text style={{ color: color_text_2 }} >Les versants externes :</Text>
+                      <Text style={{ color: color_text_2 }}>Lingual à 15 de l'horizontal : {item.left_taper}</Text>
+                      <Text style={{ color: color_text_2 }}>Vestibulaire à 45 de l'horizontal : {item.right_taper}</Text>
+                    </View>
+
+                  )}
+
+                  {item.id == 3 && (
+
                     <View>
-                     
-                                            {(parseFloat(item.left_taper)+parseFloat(item.right_taper)).toFixed(2)!=item.intersection_angle && 
-                                           <View style={{flexDirection:'row',justifyContent:'flex-start',alignContent:'center',alignItems:'center'}}>
-                                            
-                                           <Text style={{color:'red',marginRight:10}}  >Contre dépouille</Text>
-                                           <TouchableOpacity onPress={opennModalDep} >
-                                           <Icon name="search" size={30}  color="red" />
-                                           </TouchableOpacity>
 
-                                            </View>}
-                                           {excessif && !((parseFloat(item.left_taper)+parseFloat(item.right_taper)).toFixed(2)!=item.intersection_angle) && <TouchableOpacity onPress={opennModalDep} >
-                                           <Icon name="search" size={30}  color="red" />
-                                           </TouchableOpacity>
-                                           }
+                      {(parseFloat(item.left_taper) + parseFloat(item.right_taper)).toFixed(2) != item.intersection_angle &&
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'center', alignItems: 'center' }}>
 
-                      <Text style={{color:color_text_3}}>{ deptext } </Text>                       
-                        <Text style={{color:color_text_3}}>Dépouille des parois vestibulo-linguales : { item.left_taper } </Text>
-                        <Text style={{color:color_text_3}}>Dépouille des parois mésio-distale {item.right_taper}</Text>
-                     
-                        <Text style={{color:color_text_3}}>Somme des angles : {item.intersection_angle}</Text>
-                        <Text style={{color:color_text_3}}>Angles de convergence : {(parseFloat(item.left_taper)+parseFloat(item.right_taper)).toFixed(2)}</Text>
+                          <Text style={{ color: 'red', marginRight: 10 }}  >Contre dépouille</Text>
+                          <TouchableOpacity onPress={opennModalDep} >
+                            <Icon name="search" size={30} color="red" />
+                          </TouchableOpacity>
+
+                        </View>}
+                      {excessif && !((parseFloat(item.left_taper) + parseFloat(item.right_taper)).toFixed(2) != item.intersection_angle) && <TouchableOpacity onPress={opennModalDep} >
+                        <Icon name="search" size={30} color="red" />
+                      </TouchableOpacity>
+                      }
+
+                      <Text style={{ color: color_text_3 }}>{deptext} </Text>
+                      <Text style={{ color: color_text_3 }}>Dépouille des parois vestibulo-linguales : {item.left_taper} </Text>
+                      <Text style={{ color: color_text_3 }}>Dépouille des parois mésio-distale {item.right_taper}</Text>
+
+                      <Text style={{ color: color_text_3 }}>Somme des angles : {item.intersection_angle}</Text>
+                      <Text style={{ color: color_text_3 }}>Angles de convergence : {(parseFloat(item.left_taper) + parseFloat(item.right_taper)).toFixed(2)}</Text>
                     </View>
-                   
-                )}
-            
-              </View>
-            ))}
-            <Button title="Close" onPress={closeModal} />
+
+                  )}
+
+                </View>
+              ))}
+              <Button  style={styles.button} title="Close" onPress={closeModal} />
+            </View>
           </View>
-        </View>
-      </Modal>
-      <Modal
-        animationType="fade" // Animation type for the modal (slide, fade, etc.)
-        transparent={true} // Whether the modal is transparent or not
-        visible={imagepopup} // Controls the visibility of the modal
-        onRequestClose={closeImageModal}
+        </Modal>
+        <Modal
+          animationType="fade" // Animation type for the modal (slide, fade, etc.)
+          transparent={true} // Whether the modal is transparent or not
+          visible={imagepopup} // Controls the visibility of the modal
+          onRequestClose={closeImageModal}
 
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          {/* Content of the modal */}
-          <View style={{ padding: 20 }} >
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            {/* Content of the modal */}
+            <View style={{ padding: 20 }} >
 
-            {imageURI && (
-              <TouchableOpacity onPress={closeImageModal}>
-                <Image
-                  source={{ uri: imageURI }}
-                  style={[styles.selectedImage]} // Adjusted style here
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            )}
+              {imageURI && (
+                <TouchableOpacity onPress={closeImageModal}>
+                  <Image
+                    source={{ uri: imageURI }}
+                    style={[styles.selectedImage]} // Adjusted style here
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              )}
 
+            </View>
           </View>
-        </View>
-      </Modal>
-      <Modal
-        animationType="fade" // Animation type for the modal (slide, fade, etc.)
-        transparent={true} // Whether the modal is transparent or not
-        visible={iscloseddep} // Controls the visibility of the modal
-        onRequestClose={closeModalDep}
+        </Modal>
+        <Modal
+          animationType="fade" // Animation type for the modal (slide, fade, etc.)
+          transparent={true} // Whether the modal is transparent or not
+          visible={iscloseddep} // Controls the visibility of the modal
+          onRequestClose={closeModalDep}
 
-      >
-        <TouchableOpacity onPress={closeModalDep} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          {/* Content of the modal */}
-        
-                <Image
-                  source={require('./assets/schema1.png') }
-                  style={[styles.depouilleimage]} // Adjusted style here
-                  resizeMode="contain"
-                />
-                                <Image
-                  source={require('./assets/schema2.png') }
-                  style={[styles.depouilleimage]} // Adjusted style here
-                  resizeMode="contain"
-                />
-          
-          <Image
-                  source={require('./assets/schema3.png') }
-                  style={[styles.depouilleimage]} // Adjusted style here
-                  resizeMode="contain"
-                />
-          
+        >
+          <TouchableOpacity onPress={closeModalDep} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            {/* Content of the modal */}
 
-          
-        </TouchableOpacity>
-      </Modal>
+            <Image
+              source={require('./assets/schema1.png')}
+              style={[styles.depouilleimage]} // Adjusted style here
+              resizeMode="contain"
+            />
+            <Image
+              source={require('./assets/schema2.png')}
+              style={[styles.depouilleimage]} // Adjusted style here
+              resizeMode="contain"
+            />
+
+            <Image
+              source={require('./assets/schema3.png')}
+              style={[styles.depouilleimage]} // Adjusted style here
+              resizeMode="contain"
+            />
+
+
+
+          </TouchableOpacity>
+        </Modal>
       </ScrollView>
     </GestureHandlerRootView>
-    
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent:'center',
+    justifyContent: 'center',
     backgroundColor: 'lightgray',
     paddingTop: Dimensions.get('window').height * 0.035,
-    paddingRight : Dimensions.get('window').width * 0.035,
-    paddingLeft : Dimensions.get('window').width * 0.035,
-    paddingBottom : Dimensions.get('window').width * 0.035,
+    paddingRight: Dimensions.get('window').width * 0.035,
+    paddingLeft: Dimensions.get('window').width * 0.035,
+    paddingBottom: Dimensions.get('window').width * 0.035,
   },
   button: {
-    backgroundColor: 'lightblue',
+    backgroundColor: 'black',
     paddingVertical: 10,
     paddingHorizontal: 20,
+    marginRight:5,
     borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
   },
   top: {
     alignSelf: 'stretch',
@@ -1280,23 +1307,23 @@ const styles = StyleSheet.create({
 
     height: '80%',
     aspectRatio: 1,
-   
+
   },
   depouilleimage: {
 
     height: '22%',
-    marginTop:10
+    marginTop: 10
   },
   loupimage: {
-    margin:0,
-    padding:0,
+    margin: 0,
+    padding: 0,
     height: '100%',
-    width : '50%'
+    width: '50%'
   },
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    alignContent:'center',
+    alignContent: 'center',
     width: '90%',
     height: '20%',
     backgroundColor: 'lightgray',
@@ -1321,7 +1348,7 @@ const styles = StyleSheet.create({
     color: 'gray', // Change the text color
     fontStyle: 'italic', // Apply italic style
     fontWeight: 'bold', // Apply bold weight
- 
+
   },
   scrollViewContent: {
     flexGrow: 1,

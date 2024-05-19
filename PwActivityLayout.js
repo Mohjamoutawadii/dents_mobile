@@ -17,7 +17,7 @@ const PwActivityLayout = ({ pws }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFF', // Vous pouvez le remplacer par votre couleur d'arrière-plan
+        backgroundColor: '#FFF',
         paddingTop: 10,
     },
 });
