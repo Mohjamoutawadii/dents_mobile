@@ -21,7 +21,9 @@ npm install
 
 ```Android studio
 open the app on Android studio
+change the ip adress in the config.js
 Run the emulator
+
 npx react-native start --reset-cache
 Use a to run the app on android 
 ```
