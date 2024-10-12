@@ -28,11 +28,9 @@ npx react-native start --reset-cache
 Use a to run the app on android 
 ```
 
-### Démonstration vidéo
-Vous pouvez visionner la démonstration vidéo en suivant ce lien : Démonstration Vidéo
-
 
 If everything is set up _correctly_, you should see your new app running in your _Android Emulator_  shortly provided you have set up your emulator/simulator correctly.
 
 
-
+### Video Demo
+You Can Acess The video demo via this link : Démonstration Vidéo
